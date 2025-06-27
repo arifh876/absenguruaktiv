@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Absensi & Nilai Siswa</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-user-check"></i> Sistem Absensi & Nilai Siswa</h1>
+
+        <div id="authSection">
+            <h2 id="authHeading">Login Siswa</h2>
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="loginNIS">NIS:</label>
+                    <input type="text" id="loginNIS" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password:</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="primary-btn"><i class="fas fa-sign-in-alt"></i> Login</button>
+                <p class="auth-link">Belum punya akun? <a href="#" id="showRegister">Daftar Sekarang</a></p>
+            </form>
+
+            <form id="registerForm" class="auth-form" style="display: none;">
+                <div class="form-group">
+                    <label for="registerName">Nama Siswa:</label>
+                    <input type="text" id="registerName" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerNIS">NIS:</label>
+                    <input type="text" id="registerNIS" required>
+                </div>
+                 <div class="form-group">
+                    <label for="registerRFID">ID RFID (Auto Generate):</label>
+                    <input type="text" id="registerRFID" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password:</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <button type="submit" class="primary-btn"><i class="fas fa-user-plus"></i> Daftar</button>
+                <p class="auth-link">Sudah punya akun? <a href="#" id="showLogin">Login Disini</a></p>
+            </form>
+
+            <form id="adminLoginForm" class="auth-form" style="display: none;">
+                <h3 style="text-align: center; color: #0277bd;">Login Admin</h3>
+                <div class="form-group">
+                    <label for="adminUsername">Username:</label>
+                    <input type="text" id="adminUsername" value="admin" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminPassword">Password:</label>
+                    <input type="password" id="adminPassword" value="admin123" required>
+                </div>
+                <button type="submit" class="primary-btn"><i class="fas fa-user-shield"></i> Login Sebagai Admin</button>
+                <p class="auth-link">Kembali ke <a href="#" id="showStudentLogin">Login Siswa</a></p>
+            </form>
+             <p class="auth-link" style="margin-top: 20px;">Login sebagai <a href="#" id="showAdminLogin">Admin</a></p>
+             <p id="scanFeedback" class="feedback-message" style="margin-top: 20px;"></p>
+        </div>
+
+
+        <div id="appSection" style="display: none;">
+            <div class="header-app">
+                <p>Selamat datang, <strong id="loggedInUserName"></strong>!</p>
+                <div class="user-actions">
+                    <button id="logoutBtn" class="secondary-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button id="tabDashboard" class="tab-button active" onclick="openTab('dashboard')">Dashboard</button>
+                <button id="tabAbsensi" class="tab-button" onclick="openTab('absensi')">Absensi</button>
+                <button id="tabNilai" class="tab-button" onclick="openTab('nilai')">Nilai</button>
+                <button id="tabRiwayat" class="tab-button" onclick="openTab('riwayat')">Riwayat Absensi</button>
+                <button id="tabManajemen" class="tab-button" onclick="openTab('manajemen')">Manajemen Siswa</button>
+                <button id="tabManualAbsen" class="tab-button" onclick="openTab('manualAbsen')">Absen Manual</button>
+                <button id="tabRekap" class="tab-button" onclick="openTab('rekap')">Rekap Absensi</button>
+                <button id="tabPengaturan" class="tab-button" onclick="openTab('pengaturan')">Pengaturan</button>
+            </div>
+
+            <div id="dashboard" class="tab-content active">
+                <h2><i class="fas fa-tachometer-alt"></i> Dashboard Admin</h2>
+                <div class="dashboard-cards">
+                    <div class="card">
+                        <h3>Total Siswa</h3>
+                        <p id="dashboardTotalStudents">0</p>
+                    </div>
+                    <div class="card">
+                        <h3>Siswa Hadir Hari Ini</h3>
+                        <p id="dashboardStudentsPresent">0</p>
+                    </div>
+                     <div class="card">
+                        <h3>Siswa Belum Absen</h3>
+                        <p id="dashboardStudentsAbsent">0</p>
+                    </div>
+                </div>
+                <h3>Absensi Masuk Hari Ini</h3>
+                <table id="dashboardTodayAttendanceTable">
+                    <thead>
+                        <tr>
+                            <th>NIS</th>
+                            <th>Nama</th>
+                            <th>Waktu Masuk</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+                 <p id="noTodayAttendance" style="display: none; text-align: center; margin-top: 20px; color: #555;">Belum ada absensi masuk hari ini.</p>
+            </div>
+
+            <div id="absensi" class="tab-content">
+                <h2><i class="fas fa-id-card-clip"></i> Absen Hari Ini</h2>
+                <p>Silakan 'scan' kartu RFID Anda untuk mencatat absensi.</p>
+                <div id="rfidSimulator">
+                    <button id="simulateScanBtn" class="primary-btn"><i class="fas fa-broadcast-tower"></i> Scan Kartu RFID</button>
+                    </div>
+                <div id="todayAttendanceStatus">
+                    <h3>Status Absensi Hari Ini:</h3>
+                    <p>Masuk: <span id="masukTime">Belum tercatat</span></p>
+                    <p>Pulang: <span id="pulangTime">Belum tercatat</span></p>
+                </div>
+            </div>
+
+            <div id="nilai" class="tab-content">
+                <h2><i class="fas fa-award"></i> Daftar Nilai</h2>
+                <div id="nilaiFormSection" style="display: none;"> <h3>Tambah/Edit Nilai Siswa</h3>
+                    <form id="nilaiForm">
+                        <div class="form-group">
+                            <label for="nilaiSiswaSelect">Pilih Siswa:</label>
+                            <select id="nilaiSiswaSelect" required>
+                                <option value="">Pilih Siswa...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="mataPelajaran">Mata Pelajaran:</label>
+                            <input type="text" id="mataPelajaran" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="nilaiAngka">Nilai:</label>
+                            <input type="number" id="nilaiAngka" min="0" max="100" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="keteranganNilai">Keterangan (Opsional):</label>
+                            <input type="text" id="keteranganNilai" placeholder="Contoh: Sangat Baik, Remedial">
+                        </div>
+                        <input type="hidden" id="nilaiIdToEdit">
+                        <button type="submit" class="primary-btn"><i class="fas fa-save"></i> Simpan Nilai</button>
+                        <button type="button" id="cancelEditNilaiBtn" class="secondary-btn" style="display: none;"><i class="fas fa-times"></i> Batal Edit</button>
+                    </form>
+                </div>
+
+                <h3>Daftar Nilai</h3>
+                <table id="nilaiTable">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th id="nilaiTableStudentHeader" style="display: none;">Nama Siswa</th>
+                            <th>Mata Pelajaran</th>
+                            <th>Nilai</th>
+                            <th>Keterangan</th>
+                            <th id="nilaiTableActionsHeader">Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+                <p id="noNilaiData" style="display: none; text-align: center; margin-top: 20px; color: #555;">Belum ada data nilai.</p>
+            </div>
+
+            <div id="riwayat" class="tab-content">
+                <h2><i class="fas fa-history"></i> Riwayat Absensi Seluruh Siswa</h2>
+                <div class="filter-controls">
+                    <label for="filterDate">Filter Tanggal:</label>
+                    <input type="date" id="filterDate">
+                    <label for="filterNIS">Filter NIS / Nama:</label>
+                    <input type="text" id="filterNIS" placeholder="Cari NIS atau Nama...">
+                    <button id="resetFilterBtn"><i class="fas fa-sync-alt"></i> Reset Filter</button>
+                </div>
+                <table id="riwayatAbsensiTable">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>NIS</th>
+                            <th>Nama Siswa</th>
+                            <th>Waktu Absen</th>
+                            <th>Status</th>
+                            <th>Sumber</th>
+                            <th>Detail Status</th>
+                            <th>Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+                <p id="noRiwayatData" style="display: none; text-align: center; margin-top: 20px; color: #555;">Belum ada riwayat absensi.</p>
+            </div>
+
+            <div id="manajemen" class="tab-content">
+                <h2><i class="fas fa-users-cog"></i> Manajemen Akun Siswa</h2>
+                <table id="manajemenSiswaTable">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>Nama Siswa</th>
+                            <th>NIS</th>
+                            <th>ID RFID</th>
+                            <th>Password</th> <th>Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+                <p id="noManajemenData" style="display: none; text-align: center; margin-top: 20px; color: #555;">Belum ada siswa terdaftar.</p>
+            </div>
+
+            <div id="manualAbsen" class="tab-content">
+                <h2><i class="fas fa-keyboard"></i> Absen Manual Siswa</h2>
+                <p>Untuk kasus khusus, admin dapat mencatat absensi siswa secara manual.</p>
+                <form id="manualAbsenForm">
+                    <div class="form-group">
+                        <label for="manualNIS">NIS / Nama Siswa:</label>
+                        <select id="manualNIS" required>
+                            <option value="">Pilih Siswa...</option>
+                            </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="manualStatus">Status Absen:</label>
+                        <select id="manualStatus" required>
+                            <option value="Masuk">Masuk</option>
+                            <option value="Pulang">Pulang</option>
+                            <option value="Izin">Izin</option>
+                            <option value="Sakit">Sakit</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="primary-btn"><i class="fas fa-check-circle"></i> Catat Absen Manual</button>
+                </form>
+            </div>
+
+            <div id="rekap" class="tab-content">
+                <h2><i class="fas fa-chart-bar"></i> Rekapitulasi Absensi Siswa</h2>
+                <div class="filter-controls">
+                    <label for="rekapStartDate">Dari Tanggal:</label>
+                    <input type="date" id="rekapStartDate">
+                    <label for="rekapEndDate">Sampai Tanggal:</label>
+                    <input type="date" id="rekapEndDate">
+                    <button id="generateRekapBtn" class="primary-btn"><i class="fas fa-play"></i> Generate Rekap</button>
+                </div>
+                <table id="rekapAbsensiTable">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>NIS</th>
+                            <th>Nama Siswa</th>
+                            <th>Masuk</th>
+                            <th>Pulang</th>
+                            <th>Izin</th>
+                            <th>Sakit</th>
+                            <th>Total Hari Absen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+                <p id="noRekapData" style="display: none; text-align: center; margin-top: 20px; color: #555;">Pilih rentang tanggal dan generate rekap.</p>
+            </div>
+
+            <div id="pengaturan" class="tab-content">
+                <h2><i class="fas fa-cogs"></i> Pengaturan Aplikasi</h2>
+                <h3>Pengaturan Jam Kerja Ideal</h3>
+                <form id="workingHoursForm">
+                    <div class="form-group">
+                        <label for="idealMasukTime">Jam Masuk Ideal:</label>
+                        <input type="time" id="idealMasukTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="idealPulangTime">Jam Pulang Ideal:</label>
+                        <input type="time" id="idealPulangTime" required>
+                    </div>
+                    <button type="submit" class="primary-btn"><i class="fas fa-save"></i> Simpan Pengaturan</button>
+                </form>
+                <p id="workingHoursFeedback" class="feedback-message" style="margin-top: 15px;"></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeDetailModal">&times;</span>
+            <h2 id="modalTitle">Detail Absensi Siswa</h2>
+            <div class="modal-body">
+                <p>Nama: <strong id="modalStudentName"></strong></p>
+                <p>NIS: <strong id="modalStudentNIS"></strong></p>
+                <table id="modalAttendanceTable">
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Masuk</th>
+                            <th>Pulang</th>
+                            <th>Keterangan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+                 <p id="noDetailData" style="display: none; text-align: center; margin-top: 20px; color: #555;">Tidak ada detail absensi.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="editStudentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeEditStudentModal">&times;</span>
+            <h2><i class="fas fa-edit"></i> Edit Data Siswa</h2>
+            <form id="editStudentForm" class="modal-form">
+                <input type="hidden" id="editStudentOriginalNIS">
+                <div class="form-group">
+                    <label for="editStudentName">Nama Siswa:</label>
+                    <input type="text" id="editStudentName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editStudentNIS">NIS:</label>
+                    <input type="text" id="editStudentNIS" required>
+                </div>
+                <div class="form-group">
+                    <label for="editStudentRFID">ID RFID:</label>
+                    <input type="text" id="editStudentRFID" required>
+                </div>
+                <div class="form-group">
+                    <label for="editStudentPassword">Password:</label>
+                    <input type="password" id="editStudentPassword" required>
+                </div>
+                <button type="submit" class="primary-btn"><i class="fas fa-save"></i> Simpan Perubahan</button>
+            </form>
+        </div>
+    </div>
+
+     <div id="viewAccountModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeViewAccountModal">&times;</span>
+            <h2><i class="fas fa-info-circle"></i> Detail Akun Siswa</h2>
+            <div class="modal-body">
+                <p><strong>Nama:</strong> <span id="viewAccountName"></span></p>
+                <p><strong>NIS:</strong> <span id="viewAccountNIS"></span></p>
+                <p><strong>ID RFID:</strong> <span id="viewAccountRFID"></span></p>
+                <p><strong>Password:</strong> <span id="viewAccountPassword"></span></p>
+                <p><strong>Status Admin:</strong> <span id="viewAccountIsAdmin"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
